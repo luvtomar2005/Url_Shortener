@@ -1,7 +1,7 @@
 // const mongoose = require("mongoose");
 const mongoose = require("mongoose");
 
-const UrlSchema = new Mongoose.UrlSchema(
+const UrlSchema = new mongoose.Schema(
     {
         shortCode : {
             type : String,
@@ -9,7 +9,7 @@ const UrlSchema = new Mongoose.UrlSchema(
             unique : true
         },
 
-        destinationUrl : {
+        originalUrl : {
             type : String,
             required : true
         },
@@ -22,8 +22,9 @@ const UrlSchema = new Mongoose.UrlSchema(
 
     },
     {
-        timeStamps : true
+        timestamps : true
     }
 )
 
-module.exports = mongoose.model("Url" , Schema);
+
+module.exports = mongoose.model("Url" , UrlSchema);
