@@ -11,9 +11,13 @@ function createApp(){
   app.use(express.json());
   
   // Routes
-  app.use("/api" , urlRoutes);
+  const apiRoutes = require("./routes/urlRoutes");
+  const redirectRoutes = require("./routes/url_redirectRoutes");
+  app.use("/api" , apiRoutes); // for post
+  app.use("/" , redirectRoutes); // for get redirect
+  
 
-  // Health check
+//   // Health check
   app.get("/health" , (req, res) => {
     res.json({status: "OK"});
   })
