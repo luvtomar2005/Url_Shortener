@@ -1,27 +1,35 @@
-const dns = require("node:dns");
-dns.setServers(["1.1.1.1", "1.0.0.1"]);
+const express = require("express");
 
 function createApp(){
-  const express = require("express");
   const app = express();
-
-  const urlRoutes = require("./routes/urlRoutes");
-
-  // Middleware 
+  /* middlewares */
   app.use(express.json());
-  
-  // Routes
+
+  /* routes */
   const apiRoutes = require("./routes/urlRoutes");
+
   const redirectRoutes = require("./routes/url_redirectRoutes");
-  app.use("/api" , apiRoutes); // for post
-  app.use("/" , redirectRoutes); // for get redirect
+
+  app.use("/api" , apiRoutes);
+
+  app.use("/" , redirectRoutes);
+
+  /* health check */
+
+  app.get("/health" , (req , res) => {
+    res.json({
+      status : "OK"
+    })
+  })
   
 
-//   // Health check
-  app.get("/health" , (req, res) => {
-    res.json({status: "OK"});
-  })
+  /* global error middleware */
+
+  const errorMiddleware = require("./middlewares/error_middleware");
+  app.use(errorMiddleware);
+
   return app;
 }
 
 module.exports = { createApp };
+
