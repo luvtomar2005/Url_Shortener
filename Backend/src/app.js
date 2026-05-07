@@ -1,35 +1,48 @@
 const express = require("express");
 
-function createApp(){
+const AppError = require("./utils/AppError");
+
+function createApp() {
+
   const app = express();
+
   /* middlewares */
   app.use(express.json());
 
   /* routes */
   const apiRoutes = require("./routes/urlRoutes");
-
   const redirectRoutes = require("./routes/url_redirectRoutes");
 
-  app.use("/api" , apiRoutes);
+  app.use("/api", apiRoutes);
 
-  app.use("/" , redirectRoutes);
+  app.use("/", redirectRoutes);
 
   /* health check */
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "Server is running"
+    });
+  });
 
-  app.get("/health" , (req , res) => {
-    res.json({
-      status : "OK"
-    })
-  })
-  
+  /* unknown routes */
+  app.use((req, res, next) => {
+
+    next(
+      new AppError(
+        `Route ${req.originalUrl} not found`,
+        404
+      )
+    );
+
+  });
 
   /* global error middleware */
-
   const errorMiddleware = require("./middlewares/error_middleware");
+
   app.use(errorMiddleware);
 
   return app;
 }
 
 module.exports = { createApp };
-
