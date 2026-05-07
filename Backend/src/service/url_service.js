@@ -1,30 +1,99 @@
 const Url = require("../models/url_model");
+
 const { nanoid } = require("nanoid");
 
-exports.createShortUrlService = async(originalUrl) => {
+const RESERVED_ALIASES = require(
+    "../constants/reservedAliases"
+);
 
-    let shortCode;
-    let existingUrl;
+const validateCustomAlias = (alias) => {
 
-    do {
+    const aliasRegex = /^[a-z0-9-_]{3,20}$/;
 
-        shortCode = nanoid(7);
-
-        existingUrl = await Url.findOne({ shortCode });
-
-    } while(existingUrl);
-
-    const newUrl = await Url.create({
-        originalUrl,
-        shortCode
-    });
-
-    return newUrl;
+    return aliasRegex.test(alias);
 };
 
-exports.getOriginalUrlService = async(shortCode) => {
+exports.createShortUrlService = async ({
+    originalUrl,
+    customAlias
+}) => {
 
-    const url = await Url.findOne({ shortCode });
+    let shortCode;
+
+    if (customAlias) {
+
+        const normalizedAlias = customAlias
+            .trim()
+            .toLowerCase();
+
+        if (
+            RESERVED_ALIASES.includes(
+                normalizedAlias
+            )
+        ) {
+            throw new Error(
+                "Alias is reserved"
+            );
+        }
+
+        const isValidAlias =
+            validateCustomAlias(
+                normalizedAlias
+            );
+
+        if (!isValidAlias) {
+            throw new Error(
+                "Invalid custom alias"
+            );
+        }
+
+        shortCode = normalizedAlias;
+
+    } else {
+
+        let existingUrl;
+
+        do {
+
+            shortCode = nanoid(7);
+
+            existingUrl =
+                await Url.findOne({
+                    shortCode
+                });
+
+        } while(existingUrl);
+    }
+
+    try {
+
+        const newUrl = await Url.create({
+            originalUrl,
+            shortCode
+        });
+
+        return newUrl;
+
+    } catch (error) {
+
+        if (error.code === 11000) {
+
+            throw new Error(
+                "Custom alias already exists"
+            );
+        }
+
+        throw error;
+    }
+};
+
+exports.getOriginalUrlService = async (
+    shortCode
+) => {
+
+    const url = await Url.findOne({
+        shortCode
+    });
 
     return url;
 };
