@@ -1,39 +1,44 @@
 const {
-    createShortUrlService,
-    getOriginalService,
-    getOriginalUrlService
+  createShortUrlService,
+  getOriginalUrlService
 } = require("../service/url_service");
 
+const AppError = require("../utils/AppError");
 
-const asyncHandler = require("../middlewares/async_handler");
-exports.createShortUrl = asyncHandler(async(req , res) => {
-    const { originalUrl } = req.body;
-    if(!originalUrl){
-        return res.status(400).json({
-            message : "URL is required"
-        });
-    }
-    const newUrl = await createShortUrlService(originalUrl);
+/* create short url */
+exports.createShortUrl = async (req, res, next) => {
 
-    return res.status(201).json({
-        shortUrl : `http://localhost:3000/${newUrl.shortCode}`
-    });
-});
+  const {
+    originalUrl
+  } = req.body;
+
+  const newUrl = await createShortUrlService(originalUrl);
+
+  return res.status(201).json({
+    success: true,
+    shortUrl: `http://localhost:3000/${newUrl.shortCode}`
+  });
+
+};
 
 /* redirect controller */
-exports.redirectToUrl = asyncHandler(async(req , res) => {
-    const { shortCode } = req.params;
+exports.redirectToUrl = async (req, res, next) => {
 
-    if(!shortCode){
-        return res.status(400).json({
-            message : "Short Code is required"
-        });
-    }
-    const url = await getOriginalUrlService(shortCode);
-    if(!url){
-        return res.status(404).json({
-            message : "URL not found"
-        });
-    }   
-    return res.redirect(url.originalUrl);
-})
+  const { shortCode } = req.params;
+
+  const url = await getOriginalUrlService(shortCode);
+
+  if (!url) {
+
+    return next(
+      new AppError(
+        "Short URL not found",
+        404
+      )
+    );
+
+  }
+
+  return res.redirect(url.originalUrl);
+
+};
