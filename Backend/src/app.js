@@ -1,5 +1,7 @@
 const express = require("express");
 
+const analyticsRoutes = require("./routes/analytics_routes");
+
 const AppError = require("./utils/AppError");
 
 function createApp() {
@@ -11,9 +13,12 @@ function createApp() {
 
   /* routes */
   const apiRoutes = require("./routes/urlRoutes");
+
   const redirectRoutes = require("./routes/url_redirectRoutes");
 
   app.use("/api", apiRoutes);
+
+  app.use("/api/analytics", analyticsRoutes);
 
   app.use("/", redirectRoutes);
 
@@ -38,7 +43,8 @@ function createApp() {
   });
 
   /* global error middleware */
-  const errorMiddleware = require("./middlewares/error_middleware");
+  const errorMiddleware =
+    require("./middlewares/error_middleware");
 
   app.use(errorMiddleware);
 
