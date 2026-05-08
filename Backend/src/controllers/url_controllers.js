@@ -1,57 +1,78 @@
+const Url = require("../models/url_model");
+
 const {
   createShortUrlService,
   getOriginalUrlService
 } = require("../service/url_service");
 
-const AppError = require("../utils/AppError");
+const { trackAnalytics } = require("../service/analytics_service");
 
-const catchAsync = require(
-  "../utils/catchAsync"
-);
 
-/* create short url */
-exports.createShortUrl = catchAsync(
-  async (req, res, next) => {
+// CREATE SHORT URL
+const createShortUrl = async (req, res) => {
 
-    const {
-      originalUrl,
-      customAlias
-    } = req.body;
+  const { originalUrl, customAlias } = req.body;
 
-    const newUrl =
-      await createShortUrlService({
-        originalUrl,
-        customAlias
-      });
+  const newUrl = await createShortUrlService({
+    originalUrl,
+    customAlias
+  });
 
-    return res.status(201).json({
-      success: true,
+  return res.status(201).json({
+    success: true,
+    shortCode: newUrl.shortCode,
+    shortUrl: `http://localhost:3000/${newUrl.shortCode}`,
+  });
+};
 
-      shortUrl:
-        `http://localhost:3000/${newUrl.shortCode}`
-    });
-  }
-);
 
-/* redirect controller */
-exports.redirectToUrl = catchAsync(
-  async (req, res, next) => {
+// REDIRECT
+const redirectToOriginalUrl = async (req, res) => {
+
+  try {
 
     const { shortCode } = req.params;
 
-    const url =
-      await getOriginalUrlService(shortCode);
+    const url = await Url.findOne({ shortCode });
 
     if (!url) {
-
-      return next(
-        new AppError(
-          "Short URL not found",
-          404
-        )
-      );
+      return res.status(404).json({
+        success: false,
+        message: "Short Url not found",
+      });
     }
 
+    const ipAddress = req.ip;
+    const userAgent = req.get("User-Agent");
+    const referrer =
+      req.get("Referrer") ||
+      req.get("Referer");
+
+    await trackAnalytics({
+      urlId: url._id,
+      ipAddress,
+      userAgent,
+      referrer,
+    });
+
     return res.redirect(url.originalUrl);
+
+  } catch (err) {
+
+    console.log(
+      "Redirect failed",
+      err.message
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server error",
+    });
   }
-);
+};
+
+
+module.exports = {
+  createShortUrl,
+  redirectToOriginalUrl,
+};
