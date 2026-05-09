@@ -1,41 +1,35 @@
+const {
+  getAnalyticsService,
+} = require("../service/analytics_service");
 
-const Url = require("../models/url_model");
-const Analytics = require("../models/analytics_model");
-const { success } = require("zod");
+const getAnalytics = async (req, res) => {
 
-const getAnalyticsByShortCode = async (req , res) => {
-    try{
-        const { shortCode } = req.params;
+  try {
 
-        // find the matching file
-        const url = await Url.findOne({ shortCode });
+    const { shortCode } = req.params;
 
-        if(!url){
-            return res.status(404).json({
-                success : false,
-                message : "Short Url Not found",
-            });
-        }
-        // find Analytics records
-        const analytics = await Analytics.find({
-            urlId : url._id,
-        });
+    const { page, limit } = req.pagination;
 
-        return res.status(200).json({
-            success : true,
-            totalClicks : url.clicks,
-            analytics,
-        });
+    const result = await getAnalyticsService({
+      shortCode,
+      page,
+      limit,
+    });
 
-    }
-    catch(error){
-        console.log("Analytics error found " , error.message);
-        return res.status(500).json({
-            success : false,
-            message : "Internal Server error",
-        })
-    }
-}
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
 
+  } catch (error) {
 
-module.exports = { getAnalyticsByShortCode };
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+module.exports = {
+  getAnalytics,
+};

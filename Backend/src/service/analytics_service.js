@@ -1,38 +1,76 @@
-
 const Analytics = require("../models/analytics_model");
-const Url = require("../models/url_model");
+const ShortUrl = require("../models/url_model");
 
+
+// TRACK ANALYTICS
 const trackAnalytics = async ({
-    urlId,
+  urlId,
+  ipAddress,
+  userAgent,
+  referrer,
+}) => {
+
+  await Analytics.create({
+    shortUrl: urlId,
     ipAddress,
     userAgent,
     referrer,
+  });
+};
+
+
+// GET ANALYTICS
+const getAnalyticsService = async ({
+  shortCode,
+  page,
+  limit,
 }) => {
-    try{
-        // create analytics event
-        await Analytics.create({
-            urlId,
-            ipAddress,
-            userAgent,
-            referrer,
-        });
 
-        // Increment total clicks
-        await Url.findByIdAndUpdate(urlId, {
-            $inc : {clicks : 1},
-        });
+  const shortUrl = await ShortUrl.findOne({
+    shortCode,
+  }).lean();
 
+  if (!shortUrl) {
+    throw new Error("Short URL not found");
+  }
 
-        return true;
-        
-    }
-    catch(err){
-        console.log("Analytics tracking falied" , err.message);
+  const skip = (page - 1) * limit;
 
-        return false;
-    }
-}
+  const analytics = await Analytics.find({
+    shortUrl: shortUrl._id,
+  })
+    .select(
+      "ipAddress userAgent referrer createdAt"
+    )
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
+  const total = await Analytics.countDocuments({
+    shortUrl: shortUrl._id,
+  });
+
+  return {
+    analytics,
+
+    pagination: {
+      total,
+      page,
+      limit,
+
+      totalPages: Math.ceil(total / limit),
+
+      hasNextPage:
+        page < Math.ceil(total / limit),
+
+      hasPrevPage: page > 1,
+    },
+  };
+};
+
 
 module.exports = {
-    trackAnalytics,
+  trackAnalytics,
+  getAnalyticsService,
 };

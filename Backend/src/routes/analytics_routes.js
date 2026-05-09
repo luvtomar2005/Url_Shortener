@@ -3,9 +3,17 @@ const express = require("express");
 const router = express.Router();
 
 const {
-  getAnalyticsByShortCode,
+  getAnalytics,
 } = require("../controllers/analytics_controller");
 
-router.get("/:shortCode", getAnalyticsByShortCode);
+const validateAnalyticsQuery = require(
+  "../middlewares/validateAnalyticsquery"
+);
+
+router.get(
+  "/:shortCode",
+  validateAnalyticsQuery,
+  getAnalytics
+);
 
 module.exports = router;
