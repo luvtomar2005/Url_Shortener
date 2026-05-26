@@ -1,39 +1,54 @@
 const express = require("express");
+const helmet = require("helmet");
+
+const hpp = require("hpp");
 const analyticsRoutes = require("./routes/analytics_routes");
 const AppError = require("./utils/AppError");
 const requestId = require("./middlewares/requestId");
 const requestLogger = require("./middlewares/requestLogger");
+const apiLimiter = require("./middlewares/rateLimiter");
 
 function createApp() {
   const app = express();
 
-  /* middlewares — ORDER MATTERS */
-  app.use(express.json());
-  app.use(requestId);        // ← assigns req.id to every request
-  app.use(requestLogger);    // ← logs every request AFTER id is set
+  /* 1. SECURITY HEADERS — always first */
+  app.use(helmet());
 
-  /* health check — move ABOVE routes */
+  /* 2. BODY PARSING */
+  app.use(express.json({ limit: "10kb" }));
+
+  // removed sanitization for sometime because the app was not working in production
+  app.use(hpp());
+
+  /* 4. REQUEST TRACKING */
+  app.use(requestId);
+  app.use(requestLogger);
+
+  /* 5. HEALTH CHECK — before rate limiter */
   app.get("/health", (req, res) => {
     res.status(200).json({
       success: true,
-      message: "Server is running"
+      message: "Server is running",
     });
   });
 
-  /* routes */
+  /* 6. RATE LIMITING — after health check */
+  app.use("/api", apiLimiter);
+
+  /* 7. ROUTES — specific before generic */
   const apiRoutes = require("./routes/urlRoutes");
   const redirectRoutes = require("./routes/url_redirectRoutes");
 
-  app.use("/api/analytics", analyticsRoutes);  // ← specific first
-  app.use("/api", apiRoutes);                  // ← generic second
+  app.use("/api/analytics", analyticsRoutes);
+  app.use("/api", apiRoutes);
   app.use("/", redirectRoutes);
 
-  /* unknown routes */
+  /* 8. UNKNOWN ROUTES */
   app.use((req, res, next) => {
     next(new AppError(`Route ${req.originalUrl} not found`, 404));
   });
 
-  /* global error middleware */
+  /* 9. GLOBAL ERROR HANDLER — always last */
   const errorMiddleware = require("./middlewares/error_middleware");
   app.use(errorMiddleware);
 

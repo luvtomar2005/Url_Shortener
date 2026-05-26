@@ -1,78 +1,88 @@
 const Url = require("../models/url_model");
 
 const {
-  createShortUrlService,
-  getOriginalUrlService
+    createShortUrlService
 } = require("../service/url_service");
 
-const { trackAnalytics } = require("../service/analytics_service");
+const {
+    trackAnalytics
+} = require("../service/analytics_service");
 
+const AppError =
+    require("../utils/AppError");
 
-// CREATE SHORT URL
-const createShortUrl = async (req, res) => {
+const createShortUrl =
+    async (req, res) => {
 
-  const { originalUrl, customAlias } = req.body;
+        const {
+            originalUrl,
+            customAlias
+        } = req.body;
 
-  const newUrl = await createShortUrlService({
-    originalUrl,
-    customAlias
-  });
+        const newUrl =
+            await createShortUrlService({
 
-  return res.status(201).json({
-    success: true,
-    shortCode: newUrl.shortCode,
-    shortUrl: `http://localhost:3000/${newUrl.shortCode}`,
-  });
-};
+                originalUrl,
 
+                customAlias
+            });
 
-// REDIRECT
-const redirectToOriginalUrl = async (req, res) => {
+        return res.status(201).json({
 
-  try {
+            success: true,
 
-    const { shortCode } = req.params;
+            shortCode:
+                newUrl.shortCode,
 
-    const url = await Url.findOne({ shortCode });
+            shortUrl:
+                `http://localhost:3000/${newUrl.shortCode}`
+        });
+    };
 
-    if (!url) {
-      return res.status(404).json({
-        success: false,
-        message: "Short Url not found",
-      });
-    }
+const redirectToOriginalUrl =
+    async (req, res, next) => {
 
-    const ipAddress = req.ip;
-    const userAgent = req.get("User-Agent");
-    const referrer =
-      req.get("Referrer") ||
-      req.get("Referer");
+        const { shortCode } =
+            req.params;
 
-    await trackAnalytics({
-      urlId: url._id,
-      ipAddress,
-      userAgent,
-      referrer,
-    });
+        const url =
+            await Url.findOne({
+                shortCode
+            });
 
-    return res.redirect(url.originalUrl);
+        if (!url) {
 
-  } catch (err) {
+            return next(
 
-    console.log(
-      "Redirect failed",
-      err.message
-    );
+                new AppError(
+                    "Short URL not found",
+                    404
+                )
+            );
+        }
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal Server error",
-    });
-  }
-};
+        await trackAnalytics({
 
+            urlId: url._id,
+
+            ipAddress: req.ip,
+
+            userAgent:
+                req.get("User-Agent"),
+
+            referrer:
+                req.get("Referrer")
+                || req.get("Referer")
+        });
+
+        return res.redirect(
+            url.originalUrl
+        );
+    };
 
 module.exports = {
-  createShortUrl,
-  redirectToOriginalUrl,
+
+    createShortUrl,
+
+    redirectToOriginalUrl
 };

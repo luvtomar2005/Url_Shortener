@@ -2,13 +2,16 @@ const Url = require("../models/url_model");
 
 const { nanoid } = require("nanoid");
 
+const AppError = require("../utils/AppError");
+
 const RESERVED_ALIASES = require(
     "../constants/reservedAliases"
 );
 
 const validateCustomAlias = (alias) => {
 
-    const aliasRegex = /^[a-z0-9-_]{3,20}$/;
+    const aliasRegex =
+        /^[a-z0-9-_]{3,20}$/;
 
     return aliasRegex.test(alias);
 };
@@ -22,17 +25,20 @@ exports.createShortUrlService = async ({
 
     if (customAlias) {
 
-        const normalizedAlias = customAlias
-            .trim()
-            .toLowerCase();
+        const normalizedAlias =
+            customAlias
+                .trim()
+                .toLowerCase();
 
         if (
             RESERVED_ALIASES.includes(
                 normalizedAlias
             )
         ) {
-            throw new Error(
-                "Alias is reserved"
+
+            throw new AppError(
+                "Alias is reserved",
+                400
             );
         }
 
@@ -42,8 +48,10 @@ exports.createShortUrlService = async ({
             );
 
         if (!isValidAlias) {
-            throw new Error(
-                "Invalid custom alias"
+
+            throw new AppError(
+                "Invalid custom alias",
+                400
             );
         }
 
@@ -62,15 +70,18 @@ exports.createShortUrlService = async ({
                     shortCode
                 });
 
-        } while(existingUrl);
+        } while (existingUrl);
     }
 
     try {
 
-        const newUrl = await Url.create({
-            originalUrl,
-            shortCode
-        });
+        const newUrl =
+            await Url.create({
+
+                originalUrl,
+
+                shortCode
+            });
 
         return newUrl;
 
@@ -78,8 +89,9 @@ exports.createShortUrlService = async ({
 
         if (error.code === 11000) {
 
-            throw new Error(
-                "Custom alias already exists"
+            throw new AppError(
+                "Custom alias already exists",
+                409
             );
         }
 
@@ -87,13 +99,13 @@ exports.createShortUrlService = async ({
     }
 };
 
-exports.getOriginalUrlService = async (
-    shortCode
-) => {
+exports.getOriginalUrlService =
+    async (shortCode) => {
 
-    const url = await Url.findOne({
-        shortCode
-    });
+        const url =
+            await Url.findOne({
+                shortCode
+            });
 
-    return url;
-};
+        return url;
+    };

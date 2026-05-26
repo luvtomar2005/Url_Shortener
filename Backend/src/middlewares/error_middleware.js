@@ -1,17 +1,41 @@
-const errorMiddleware = (err, req, res, next) => {
+const logger = require("../config/logger");
 
-    const statusCode = err.statusCode || 500;
+const errorMiddleware = (
+    err,
+    req,
+    res,
+    next
+) => {
 
-    const message =
-        err.statusCode
-            ? err.message
-            : "Internal Server Error";
+    err.statusCode = err.statusCode || 500;
 
-    return res.status(statusCode).json({
+    err.status = err.status || "error";
+
+    logger.error({
+
+        requestId: req.requestId,
+
+        message: err.message,
+
+        stack: err.stack,
+
+        statusCode: err.statusCode,
+
+        method: req.method,
+
+        url: req.originalUrl
+    });
+
+    res.status(err.statusCode).json({
+
         success: false,
-        message,
+
+        status: err.status,
+
+        message: err.isOperational
+            ? err.message
+            : "Something went wrong"
     });
 };
 
 module.exports = errorMiddleware;
-

@@ -2,31 +2,31 @@ const AppError = require("../utils/AppError");
 
 const validate = (schema) => {
 
-  return (req, res, next) => {
+    return (req, res, next) => {
 
-    const { error } = schema.validate(req.body, {
-      abortEarly: false
-    });
+        const { error } = schema.validate(req.body, {
 
-    if (error) {
+            abortEarly: false
+        });
 
-      const errorMessages = error.details.map(
-        (err) => err.message
-      );
+        if (error) {
 
-      return next(
-        new AppError(
-          errorMessages.join(", "),
-          400
-        )
-      );
+            const errorMessages = error.details.map(
 
-    }
+                (err) => err.message
+            );
 
-    next();
+            return next(
 
-  };
+                new AppError(
+                    errorMessages.join(", "),
+                    400
+                )
+            );
+        }
 
+        next();
+    };
 };
 
 module.exports = validate;

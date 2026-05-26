@@ -5,9 +5,9 @@ const createShortUrlSchema = Joi.object({
     .uri()
     .required()
     .messages({
-        "string base" : "URL must be a string",
+        "string.base" : "URL must be a string",
         "string.empty" : "URL is required",
-        "String.uri": "Please provide a valid URL",
+        "string.uri": "Please provide a valid URL",
         "any.required" : "URL is required"
     }),
 
