@@ -1,24 +1,36 @@
 require("dotenv").config({ override: true });
-  
+
 const { createApp } = require("./app");
-const { loadEnv }  = require("./config/env");
+const { loadEnv } = require("./config/env");
 const { connectMongo } = require("./config/mongo");
 
-async function main(){
+const {
+    connectRedis,
+    redisClient
+} = require("./config/redis");
+
+async function main() {
+
     const env = loadEnv();
+
     await connectMongo(env.MONGODB_URI);
-    
+
+    await connectRedis();
+
+   
+
     const app = createApp();
-    app.listen(env.PORT , () => {
-        console.log(`Server is running on port ${env.PORT}`);
-    })
+
+    app.listen(env.PORT, () => {
+        console.log(
+            `Server is running on port ${env.PORT}`
+        );
+    });
 }
 
 main().catch((err) => {
-    console.log("Startup error:  " , err);
+
+    console.log("Startup error:", err);
+
     process.exit(1);
-})
-
-
-
-
+});
