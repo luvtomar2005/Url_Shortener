@@ -2,7 +2,7 @@ const logger = require("../config/logger");
 
 const requestLogger = (req, res, next) => {
 
-  console.log("LOGGER MIDDLEWARE HIT");
+  
 
   const start = Date.now();
 
