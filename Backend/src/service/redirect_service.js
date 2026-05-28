@@ -11,21 +11,46 @@ async (shortCode) => {
         "REDIRECT SERVICE EXECUTED"
     );
 
-    const cachedUrl =
-        await redisClient.get(shortCode);
+    let cachedUrl = null;
+
+    try {
+
+        cachedUrl =
+            await redisClient.get(shortCode);
+
+    } catch (error) {
+
+        console.error(
+            "REDIS GET FAILED:",
+            error.message
+        );
+    }
 
     if (cachedUrl) {
 
-        console.log("CACHE HIT");
+        try {
 
-        return JSON.parse(cachedUrl);
+            const parsedData =
+                JSON.parse(cachedUrl);
+
+            console.log("CACHE HIT");
+
+            return parsedData;
+
+        } catch (error) {
+
+            console.error(
+                "CACHE PARSE FAILED:",
+                error.message
+            );
+        }
     }
 
     console.log("CACHE MISS");
 
     const url = await Url.findOne({
         shortCode,
-        
+        status: "active"
     }).lean();
 
     if (!url) {
@@ -40,19 +65,35 @@ async (shortCode) => {
         return null;
     }
 
-    await redisClient.set(
-        shortCode,
-        JSON.stringify(url),
-        {
-            EX: 3600
-        }
-    );
+    try {
 
-    console.log(
-        "REDIS CACHE STORED"
-    );
+        await redisClient.set(
+            shortCode,
+            JSON.stringify({
+                originalUrl:
+                    url.originalUrl
+            }),
+            {
+                EX: 3600
+            }
+        );
 
-    return url;
+        console.log(
+            "REDIS CACHE STORED"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "REDIS SET FAILED:",
+            error.message
+        );
+    }
+
+    return {
+        originalUrl:
+            url.originalUrl
+    };
 };
 
 module.exports = {
