@@ -1,41 +1,41 @@
 const logger = require("../config/logger");
 
-const errorMiddleware = (
-    err,
-    req,
-    res,
-    next
-) => {
+const errorMiddleware = (err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
 
-    err.statusCode = err.statusCode || 500;
+  const status = err.status || "error";
 
-    err.status = err.status || "error";
-
+  try {
     logger.error({
+      requestId: req.requestId,
 
-        requestId: req.requestId,
+      message: err.message,
 
-        message: err.message,
+      stack: err.stack,
 
-        stack: err.stack,
+      statusCode,
 
-        statusCode: err.statusCode,
+      method: req.method,
 
-        method: req.method,
-
-        url: req.originalUrl
+      url: req.originalUrl,
     });
+  } catch (loggingError) {
+    console.error("LOGGER FAILURE:", loggingError.message);
+  }
 
-    res.status(err.statusCode).json({
+  const response = {
+    success: false,
 
-        success: false,
+    status,
 
-        status: err.status,
+    message: err.isOperational ? err.message : "Something went wrong",
+  };
 
-        message: err.isOperational
-            ? err.message
-            : "Something went wrong"
-    });
+  if (process.env.NODE_ENV === "development") {
+    response.stack = err.stack;
+  }
+
+  return res.status(statusCode).json(response);
 };
 
 module.exports = errorMiddleware;
