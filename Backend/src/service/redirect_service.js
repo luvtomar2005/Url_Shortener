@@ -1,4 +1,4 @@
-
+const AppError = require("../utils/AppError");
 const Url = require("../models/url_model");
 const cache_service = require("./cache_service");
 const resolvedRedirectService = async(shortCode) => {
@@ -18,7 +18,10 @@ const resolvedRedirectService = async(shortCode) => {
     }).lean();
 
     if(!url){
-        return null;
+        throw new AppError(
+            "Short Url Not Found",
+            404
+        )
     }
     if(url.expiresAt && new Date(url.expiresAt).getTime() <= Date.now()){
         return null;
