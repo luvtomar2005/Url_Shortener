@@ -1,31 +1,21 @@
 const Analytics = require("../models/analytics_model");
 const ShortUrl = require("../models/url_model");
 
-
 // TRACK ANALYTICS
-const trackAnalytics = async ({
-  urlId,
-  ipAddress,
-  userAgent,
-  referrer,
-}) => {
-
+const trackAnalytics = async ({ urlId, ipAddress, userAgent, referrer }) => {
   await Analytics.create({
-    shortUrl: urlId,
+    urlId,
+
     ipAddress,
+
     userAgent,
+
     referrer,
   });
 };
 
-
 // GET ANALYTICS
-const getAnalyticsService = async ({
-  shortCode,
-  page,
-  limit,
-}) => {
-
+const getAnalyticsService = async ({ shortCode, page, limit }) => {
   const shortUrl = await ShortUrl.findOne({
     shortCode,
   }).lean();
@@ -39,9 +29,7 @@ const getAnalyticsService = async ({
   const analytics = await Analytics.find({
     shortUrl: shortUrl._id,
   })
-    .select(
-      "ipAddress userAgent referrer createdAt"
-    )
+    .select("ipAddress userAgent referrer createdAt")
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
@@ -61,14 +49,12 @@ const getAnalyticsService = async ({
 
       totalPages: Math.ceil(total / limit),
 
-      hasNextPage:
-        page < Math.ceil(total / limit),
+      hasNextPage: page < Math.ceil(total / limit),
 
       hasPrevPage: page > 1,
     },
   };
 };
-
 
 module.exports = {
   trackAnalytics,

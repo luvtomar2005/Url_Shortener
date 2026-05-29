@@ -1,33 +1,34 @@
 const logger = require("../config/logger");
 
 const requestLogger = (req, res, next) => {
+  const startTime = Date.now();
 
-  
+  logger.info({
+    requestId: req.requestId,
 
-  const start = Date.now();
+    method: req.method,
+
+    url: req.originalUrl,
+
+    message: "Incoming request",
+  });
 
   res.on("finish", () => {
+    const duration = Date.now() - startTime;
 
-    try {
+    logger.info({
+      requestId: req.requestId,
 
-      const duration = Date.now() - start;
+      method: req.method,
 
-      logger.info({
-        requestId: req.id,
-        method: req.method,
-        url: req.originalUrl,
-        statusCode: res.statusCode,
-        duration: `${duration}ms`,
-        ip: req.ip
-      });
+      url: req.originalUrl,
 
-    } catch (error) {
+      statusCode: res.statusCode,
 
-      console.log("LOGGER ERROR:");
-      console.log(error);
+      duration: `${duration}ms`,
 
-    }
-
+      message: "Request completed",
+    });
   });
 
   next();

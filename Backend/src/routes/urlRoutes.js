@@ -4,22 +4,18 @@ const router = express.Router();
 
 const urlController = require("../controllers/url_controllers");
 
-const catchAsync = require("../utils/catchAsync");
-
 const validate = require("../middlewares/validate");
 
-const {
-  createShortUrlSchema
-} = require("../validations/urlValidation");
+const asyncHandler = require("../middlewares/async_handler");
 
-
+const { createShortUrlSchema } = require("../validations/urlValidation");
 
 router.post(
   "/shorten",
 
   validate(createShortUrlSchema),
 
-  catchAsync(urlController.createShortUrl)
+  asyncHandler(urlController.createShortUrl),
 );
 
 module.exports = router;

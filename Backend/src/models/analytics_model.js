@@ -2,25 +2,32 @@ const mongoose = require("mongoose");
 
 const analyticsSchema = new mongoose.Schema(
   {
-    shortUrl: {
+    urlId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "ShortUrl",
+
+      ref: "Url",
+
       required: true,
-      index: true
+
+      index: true,
     },
 
-    ipAddress: String,
+    ipAddress: {
+      type: String,
+    },
 
-    userAgent: String,
+    userAgent: {
+      type: String,
+    },
 
-    referrer: String
+    referrer: {
+      type: String,
+    },
   },
+
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
-module.exports = mongoose.model(
-  "Analytics",
-  analyticsSchema
-);
+module.exports = mongoose.model("Analytics", analyticsSchema);

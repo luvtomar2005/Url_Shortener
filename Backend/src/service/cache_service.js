@@ -1,4 +1,4 @@
-const redisClient = require("../config/redis");
+const { redisClient } = require( "../config/redis" );
 class CachceService{
     async get(key){
         try{
