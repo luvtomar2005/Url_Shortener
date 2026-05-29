@@ -1,101 +1,38 @@
+
 const Url = require("../models/url_model");
+const cache_service = require("./cache_service");
+const resolvedRedirectService = async(shortCode) => {
+    console.log("Redirect Service executed");
 
-const {
-    redisClient
-} = require("../config/redis");
+    const cachedUrl = await cache_service(shortCode);
 
-const resolveRedirectService =
-async (shortCode) => {
-
-    console.log(
-        "REDIRECT SERVICE EXECUTED"
-    );
-
-    let cachedUrl = null;
-
-    try {
-
-        cachedUrl =
-            await redisClient.get(shortCode);
-
-    } catch (error) {
-
-        console.error(
-            "REDIS GET FAILED:",
-            error.message
-        );
+    if(cachedUrl){
+        console.log("Cache Hit");
+        return cachedUrl;
     }
-
-    if (cachedUrl) {
-
-        try {
-
-            const parsedData =
-                JSON.parse(cachedUrl);
-
-            console.log("CACHE HIT");
-
-            return parsedData;
-
-        } catch (error) {
-
-            console.error(
-                "CACHE PARSE FAILED:",
-                error.message
-            );
-        }
-    }
-
-    console.log("CACHE MISS");
+    console.log("Cache Miss");
 
     const url = await Url.findOne({
         shortCode,
-        status: "active"
+        status : "active"
     }).lean();
 
-    if (!url) {
+    if(!url){
         return null;
     }
-
-    if (
-        url.expiresAt &&
-        new Date(url.expiresAt)
-            .getTime() <= Date.now()
-    ) {
+    if(url.expiresAt && new Date(url.expiresAt).getTime() <= Date.now()){
         return null;
     }
-
-    try {
-
-        await redisClient.set(
-            shortCode,
-            JSON.stringify({
-                originalUrl:
-                    url.originalUrl
-            }),
-            {
-                EX: 3600
-            }
-        );
-
-        console.log(
-            "REDIS CACHE STORED"
-        );
-
-    } catch (error) {
-
-        console.error(
-            "REDIS SET FAILED:",
-            error.message
-        );
-    }
-
+    await cacheService.set(
+        shortCode,
+        {
+            originalUrl : url.originalUrl
+        }
+    );
     return {
-        originalUrl:
-            url.originalUrl
-    };
-};
+        originalUrl : url.originalUrl
+    }
+}
 
-module.exports = {
-    resolveRedirectService
-};
+
+module.exports = { resolvedRedirectService}

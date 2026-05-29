@@ -1,34 +1,51 @@
-import redisClient from "../config/redis";
-import logger from "../utils/logger.js";
-
-export const getCache = async (key) => {
-    try{
-        const data = await redisClient.get(key);
-
-        if(data){
-            logger.info(`Cache Hit : {key}`);
+const redisClient = require("../config/redis");
+class CachceService{
+    async get(key){
+        try{
+            const data = await redisClient.get(key);
+            if(!data){
+                return null;
+            }
             return JSON.parse(data);
         }
-        logger.info(`Cache Miss : {key}`);
-        return null;
-    }
-    catch(error){
-        logger.error(`Redis Get Failed : ${error.message}`);
+        catch(error){
+            console.log("Redis Get Error:", error.message);
 
-        return null;
+            return null;
+        }
+
     }
-}
-export const setCache = async (key , value , ttl = 3600) => {
-    try{
-        await redisClient.set(
-            key,
-            JSON.stringify(value),
-            {
+    async set(key , value , ttl = 3600){
+        try{
+            await redisClient.set(
+                key,
+                JSON.stringify(value),
+                {
                 EX : ttl
             }
-        );
+            )
+            return true;
+        }
+        catch(error){
+            console.log("Redis Set Error" , error.message);
+
+            return false;
+        }
+
     }
-    catch(error){
-        logger.error(`Redis Set failed : ${error.message}`);
+    async del(key){
+        try{
+            await redisClient.del(key);
+            return true;
+        }
+        catch(error){
+            console.log("Redis Delete Error:" , error.message);
+
+            return false;
+        }
     }
 }
+
+module.exports = new CachceService();
+
+
