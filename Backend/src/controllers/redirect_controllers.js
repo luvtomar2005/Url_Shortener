@@ -25,13 +25,14 @@ const redirectToOriginalUrl = async (req, res, next) => {
     const userAgent = req.get("User-Agent");
 
     const referrer = req.get("Referrer") || req.get("Referer");
-
-    await trackAnalytics({
-      urlId: url._id,
+    trackAnalytics({
+      urlId : url._id;
       ipAddress,
       userAgent,
       referrer,
-    });
+    }).catch((err) => {
+      console.log("Analytics tracking failed: " , err.message);
+    })
 
     return res.redirect(url.originalUrl);
   } catch (err) {
@@ -42,3 +43,4 @@ const redirectToOriginalUrl = async (req, res, next) => {
 module.exports = {
   redirectToOriginalUrl,
 };
+
