@@ -26,7 +26,7 @@ const redirectToOriginalUrl = async (req, res, next) => {
 
     const referrer = req.get("Referrer") || req.get("Referer");
     trackAnalytics({
-      urlId : url._id;
+      urlId : url._id,
       ipAddress,
       userAgent,
       referrer,
