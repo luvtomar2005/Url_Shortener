@@ -1,576 +1,439 @@
-# Production-Oriented URL Shortener Backend
+# 🚀 Production-Grade URL Shortener Backend
 
-A production-oriented backend system built using Node.js, Express.js, and MongoDB focused on learning real backend engineering concepts beyond basic CRUD operations.
+A scalable and production-oriented URL shortener backend built using **Node.js, Express.js, MongoDB, Redis, Docker, and modern backend engineering practices**.
 
-This project is not designed as a tutorial-level URL shortener clone. The primary goal is to understand:
+This project was built in **2026** by **Luv Tomar** with a strong focus on learning real backend architecture instead of building a basic CRUD application.
 
-* Backend architecture
-* Middleware lifecycle
-* Request tracing
-* Structured logging
-* Centralized error handling
-* Validation pipelines
-* Security layers
-* Scalability thinking
-* Observability
-* Runtime debugging
-* Production failure handling
+The goal of this project was not just to shorten URLs, but to deeply understand:
 
-The frontend layer will be integrated later.
+* scalable backend architecture
+* request lifecycle management
+* Redis caching strategies
+* graceful degradation
+* async side effects
+* timeout protection
+* observability
+* validation pipelines
+* layered backend design
+* production-oriented backend engineering
 
 ---
 
-# Overview
+# 📌 Project Highlights
 
-This backend service allows users to:
+This backend system includes:
 
-* Create shortened URLs
-* Use custom aliases
-* Redirect shortened URLs
-* Track analytics events
-* Handle errors consistently
-* Validate incoming requests
-* Protect APIs using production-oriented middleware
-* Log request lifecycle data using structured logs
+✅ URL shortening system
+✅ High-speed redirect architecture
+✅ Redis caching layer
+✅ Cache-aside pattern implementation
+✅ Graceful Redis fallback
+✅ Redis timeout protection
+✅ Analytics tracking pipeline
+✅ Fire-and-forget analytics architecture
+✅ Validation middleware using Zod
+✅ Rate limiting
+✅ Structured logging using Pino
+✅ Request tracing with request IDs
+✅ Layered architecture
+✅ Centralized error handling
+✅ Dockerized Redis setup
 
-The project architecture follows a layered backend structure:
+---
 
-```txt
-Routes → Middleware → Controllers → Services → Database
+# 🏗️ System Architecture
+
+The backend follows a layered architecture pattern:
+
+```txt id="xpf0ut"
+Routes
+  ↓
+Middlewares
+  ↓
+Controllers
+  ↓
+Services
+  ↓
+Database / Redis
 ```
 
-Instead of putting everything inside controllers, responsibilities are separated properly to improve:
+This separation improves:
 
-* maintainability
 * scalability
+* maintainability
 * debugging
-* testing
-* architectural clarity
+* code organization
+* production readiness
 
 ---
 
-# Current Features
+# ⚡ Redirect Request Lifecycle
 
-## Core Features
+The redirect system is the most important flow in this backend.
 
-* URL shortening
-* Custom aliases
-* Redirect handling
-* Analytics tracking foundation
-
-## Backend Engineering Features
-
-* Request tracing using request IDs
-* Structured logging using Pino
-* Centralized error handling
-* Async error wrappers
-* Validation middleware using Joi
-* Security middleware
-* Rate limiting
-* Payload size limiting
-* HPP protection
-* Environment variable management
-* Layered backend architecture
+```txt id="vjlwm7"
+Client Request
+    ↓
+Express Route
+    ↓
+Validation Middleware
+    ↓
+Redirect Controller
+    ↓
+Redirect Service
+    ↓
+Redis Cache Lookup
+        ↓
+    CACHE HIT → return cached URL
+        OR
+    CACHE MISS → query MongoDB
+                    ↓
+                populate Redis
+    ↓
+Trigger Analytics Async
+    ↓
+302 Redirect Response
+```
 
 ---
 
-# Tech Stack
+# 🧠 Backend Engineering Concepts Implemented
+
+# 1. Cache-Aside Architecture
+
+Redis is used as a caching layer while MongoDB remains the source of truth.
+
+Flow:
+
+```txt id="pjlwm4"
+Request
+ ↓
+Check Redis
+ ↓
+If cache miss
+ ↓
+Fetch from MongoDB
+ ↓
+Store in Redis
+ ↓
+Return response
+```
+
+Benefits:
+
+* faster redirects
+* reduced MongoDB load
+* scalable read performance
+
+---
+
+# 2. Graceful Degradation
+
+Redis is treated as a **soft dependency**.
+
+If Redis fails:
+
+* application does NOT crash
+* MongoDB fallback automatically works
+
+This ensures system reliability.
+
+---
+
+# 3. Redis Timeout Protection
+
+Slow dependencies are dangerous in production systems.
+
+Redis operations are protected using:
+
+```js
+Promise.race()
+```
+
+This prevents slow Redis responses from blocking request flow.
+
+Benefits:
+
+* fail-fast behavior
+* lower latency
+* resilient architecture
+
+---
+
+# 4. Fire-and-Forget Analytics
+
+Analytics tracking is intentionally asynchronous.
+
+Instead of:
+
+```js
+await trackAnalytics()
+```
+
+the backend uses:
+
+```js
+trackAnalytics().catch(...)
+```
+
+This ensures:
+
+* analytics does not block redirects
+* redirect latency remains low
+* analytics failures stay isolated
+
+---
+
+# 5. Structured Logging
+
+Pino logger is used for:
+
+* request logging
+* error logging
+* observability
+* debugging request lifecycle
+
+---
+
+# 6. Request ID Tracing
+
+Every request gets a unique request ID.
+
+Benefits:
+
+* easier debugging
+* request correlation
+* production tracing
+
+---
+
+# 7. Validation Layer
+
+Zod validation middleware is used to:
+
+* reject malformed requests
+* enforce API contracts
+* keep controllers clean
+
+---
+
+# 8. Centralized Error Handling
+
+A custom `AppError` class and global error middleware were implemented for:
+
+* predictable API errors
+* cleaner architecture
+* operational error handling
+
+---
+
+# 🛠️ Tech Stack
 
 ## Backend
 
 * Node.js
 * Express.js
+
+## Database
+
 * MongoDB
 * Mongoose
 
-## Validation & Security
+## Caching
 
-* Joi
-* Helmet
-* express-rate-limit
-* HPP
+* Redis
 
-## Logging & Utilities
+## Validation
 
-* Pino
-* pino-pretty
-* NanoID
-* dotenv
+* Zod
 
----
+## Logging
 
-# Backend Architecture
+* Pino Logger
 
-The backend follows a layered architecture pattern.
+## DevOps
 
-```txt
-Client Request
-      ↓
-Security Middleware
-      ↓
-Request Logger
-      ↓
-Validation Middleware
-      ↓
-Controller Layer
-      ↓
-Service Layer
-      ↓
-Database Layer
-      ↓
-Response
-```
+* Docker
 
 ---
 
-# Why This Architecture?
+# 📁 Folder Structure
 
-Most beginner projects place all logic inside route handlers.
-
-That approach becomes difficult to:
-
-* debug
-* scale
-* test
-* maintain
-* extend
-
-This project separates responsibilities intentionally.
-
-## Routes
-
-Responsible only for:
-
-* endpoint definitions
-* middleware chaining
-* controller mapping
-
-## Controllers
-
-Responsible for:
-
-* request/response handling
-* extracting request data
-* sending responses
-
-## Services
-
-Responsible for:
-
-* business logic
-* reusable backend operations
-* database interaction orchestration
-
-## Middleware
-
-Responsible for:
-
-* validation
-* security
-* logging
-* request tracing
-* centralized error handling
-
----
-
-# Request Lifecycle Flow
-
-Example:
-
-```http
-POST /api/shorten
-```
-
-Request execution flow:
-
-```txt
-Incoming Request
-      ↓
-Helmet Security Headers
-      ↓
-Body Parser
-      ↓
-Rate Limiter
-      ↓
-Request ID Middleware
-      ↓
-Request Logger Middleware
-      ↓
-Validation Middleware
-      ↓
-Controller
-      ↓
-Service Layer
-      ↓
-MongoDB
-      ↓
-Response Returned
-      ↓
-Response Logged
-```
-
----
-
-# Project Structure
-
-```txt
-Backend/
+```txt id="jlwm8h"
+src/
 │
-├── src/
-│   ├── config/
-│   │   ├── logger.js
-│   │   └── mongo.js
-│   │
-│   ├── constants/
-│   │   └── reservedAliases.js
-│   │
-│   ├── controllers/
-│   │   └── url_controllers.js
-│   │
-│   ├── middlewares/
-│   │   ├── error_middleware.js
-│   │   ├── requestId.js
-│   │   ├── requestLogger.js
-│   │   ├── validate.js
-│   │   └── rateLimiter.js
-│   │
-│   ├── models/
-│   │   ├── url_model.js
-│   │   └── analytics_model.js
-│   │
-│   ├── routes/
-│   │   ├── urlRoutes.js
-│   │   ├── url_redirectRoutes.js
-│   │   └── analytics_routes.js
-│   │
-│   ├── service/
-│   │   ├── url_service.js
-│   │   ├── redirect_service.js
-│   │   └── analytics_service.js
-│   │
-│   ├── utils/
-│   │   ├── AppError.js
-│   │   ├── catchAsync.js
-│   │   └── ApiError.js
-│   │
-│   ├── validations/
-│   │   └── urlValidation.js
-│   │
-│   ├── app.js
-│   └── server.js
+├── config/
+├── constants/
+├── controllers/
+├── middlewares/
+├── models/
+├── routes/
+├── service/
+├── utils/
+├── validations/
 │
-├── .env
-├── .gitignore
-├── package.json
-└── README.md
+├── app.js
+└── server.js
 ```
 
 ---
 
-# API Endpoints
+# 📂 Important Folders
 
-## Create Short URL
-
-```http
-POST /api/shorten
-```
-
-### Request Body
-
-```json
-{
-  "originalUrl": "https://www.google.com"
-}
-```
-
-### Optional Custom Alias
-
-```json
-{
-  "originalUrl": "https://www.google.com",
-  "customAlias": "google"
-}
-```
-
-### Response
-
-```json
-{
-  "success": true,
-  "shortCode": "abc123",
-  "shortUrl": "http://localhost:3000/abc123"
-}
-```
+| Folder      | Purpose                              |
+| ----------- | ------------------------------------ |
+| config      | MongoDB, Redis, logger configuration |
+| controllers | Request-response handling            |
+| service     | Business logic                       |
+| middlewares | Validation, logging, error handling  |
+| models      | MongoDB schemas                      |
+| validations | Zod validation schemas               |
+| routes      | API route definitions                |
+| utils       | Helper utilities and custom errors   |
 
 ---
 
-## Redirect Short URL
+# 📌 Important Backend Files
 
-```http
-GET /:shortCode
-```
+## redirect_service.js
 
-Example:
+Core backend architecture file.
 
-```http
-GET /abc123
-```
+Responsibilities:
 
-Redirects user to:
-
-```txt
-https://www.google.com
-```
+* Redis cache lookup
+* MongoDB fallback
+* expiration validation
+* cache population
+* redirect resolution
 
 ---
 
-## Health Check
-
-```http
-GET /health
-```
-
-### Response
-
-```json
-{
-  "success": true,
-  "message": "Server is running"
-}
-```
-
----
-
-# Middleware Pipeline
-
-The middleware chain is intentionally structured.
-
-## Security First
-
-```js
-app.use(helmet())
-```
-
-Adds security headers.
-
----
-
-## Request Parsing
-
-```js
-app.use(express.json())
-```
-
-Parses JSON request bodies.
-
----
-
-## Rate Limiting
-
-```js
-app.use(apiLimiter)
-```
-
-Protects APIs from abuse and brute-force traffic.
-
----
-
-## Request ID Middleware
-
-Assigns a unique request ID to every request.
-
-Useful for:
-
-* tracing requests
-* debugging production issues
-* correlating logs
-
----
-
-## Request Logger Middleware
-
-Logs:
-
-* method
-* route
-* status code
-* response time
-* IP address
-
-using structured logs.
-
----
-
-## Validation Middleware
-
-Validates incoming request bodies using Joi.
-
-Invalid requests never reach controllers.
-
----
-
-## Centralized Error Middleware
+## cache_service.js
 
 Handles:
 
-* operational errors
-* unexpected runtime errors
-* response formatting
-* production-safe error responses
+* Redis abstraction
+* timeout protection
+* graceful failure handling
+* get/set/delete operations
 
 ---
 
-# Error Handling Architecture
+## analytics_service.js
 
-The project uses centralized error handling.
+Handles:
 
-Instead of:
+* analytics event storage
+* analytics pipeline
+* fire-and-forget side effects
 
-```js
-try {
+---
 
-} catch(err) {
+## error_middleware.js
 
+Handles:
+
+* centralized API error responses
+* operational error management
+
+---
+
+# 🔗 API Endpoints
+
+# Create Short URL
+
+```http id="jlwm2q"
+POST /api/url/shorten
+```
+
+## Request Body
+
+```json
+{
+  "originalUrl": "https://google.com"
 }
 ```
 
-inside every controller,
+## Response
 
-errors are forwarded to a single global middleware.
-
----
-
-# AppError
-
-Custom error class used for operational errors.
-
-Examples:
-
-* invalid input
-* duplicate alias
-* route not found
-* validation failures
-
----
-
-# Operational vs Programmer Errors
-
-## Operational Errors
-
-Expected runtime failures.
-
-Examples:
-
-* invalid request body
-* URL not found
-* alias already exists
-
-Safe to expose to client.
-
----
-
-## Programmer Errors
-
-Unexpected backend bugs.
-
-Examples:
-
-* undefined variables
-* null access
-* broken logic
-
-These are hidden from clients in production.
-
----
-
-# Logging System
-
-Structured logging is implemented using Pino.
-
-Example log:
-
-```txt
-INFO:
-method: "POST"
-url: "/api/shorten"
-statusCode: 201
-duration: "199ms"
-ip: "::1"
+```json
+{
+  "success": true,
+  "data": {
+    "shortCode": "abc123"
+  }
+}
 ```
 
 ---
 
-# Why Structured Logging?
+# Redirect URL
 
-Structured logs help with:
-
-* production debugging
-* observability
-* request tracing
-* performance monitoring
-* distributed systems debugging
-
-This is significantly better than:
-
-```js
-console.log("something happened")
+```http id="2jlwm9"
+GET /:shortCode
 ```
 
----
-
-# Security Features
-
-## Helmet
-
-Adds security-related HTTP headers.
+Redirects the user to the original URL.
 
 ---
 
-## Rate Limiting
+# Get Analytics
 
-Prevents:
+```http id="5jlwm0"
+GET /api/analytics/:shortCode
+```
 
-* brute-force attacks
-* spam requests
-* abuse
-
----
-
-## HPP Protection
-
-Protects against HTTP Parameter Pollution attacks.
+Returns analytics data for the short URL.
 
 ---
 
-## Payload Size Limiting
+# ⚙️ Environment Variables
 
-Protects server from excessively large payloads.
-
----
-
-# Environment Variables
-
-Example:
+Create a `.env` file in the root directory.
 
 ```env
 PORT=3000
-MONGO_URI=your_mongodb_connection_string
-LOG_LEVEL=info
+
+MONGO_URI=your_mongodb_connection
+
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+BASE_URL=http://localhost:3000
 ```
 
 ---
 
-# Local Setup
+# 🐳 Running Redis Using Docker
 
-## Clone Repository
+## Start Redis Container
 
 ```bash
-git clone <repository-url>
+docker run --name redis-server -p 6379:6379 redis
 ```
 
 ---
 
-## Install Dependencies
+## Stop Redis
+
+```bash
+docker stop redis-server
+```
+
+---
+
+## Start Redis Again
+
+```bash
+docker start redis-server
+```
+
+---
+
+# ▶️ Running Locally
+
+# Install Dependencies
 
 ```bash
 npm install
@@ -578,24 +441,7 @@ npm install
 
 ---
 
-## Configure Environment Variables
-
-Create:
-
-```txt
-.env
-```
-
-Add:
-
-```env
-PORT=3000
-MONGO_URI=your_mongodb_uri
-```
-
----
-
-## Start Development Server
+# Start Development Server
 
 ```bash
 npm run dev
@@ -603,122 +449,68 @@ npm run dev
 
 ---
 
-# Production Engineering Concepts Learned
+# 🧪 Backend Resilience Testing
 
-This project focuses heavily on backend engineering concepts such as:
+This project was intentionally tested for:
 
-* middleware lifecycle
-* request tracing
-* centralized logging
-* layered architecture
-* error classification
-* runtime debugging
-* infrastructure failures
-* operational stability
-* dependency compatibility
-* API protection
-* validation pipelines
-* observability
+✅ Redis failure
+✅ Redis timeout handling
+✅ MongoDB fallback behavior
+✅ Fire-and-forget analytics isolation
+✅ Expired URL handling
+✅ Validation rejection flow
 
 ---
 
-# Debugging Lessons Learned
+# 📊 Current Backend Capabilities
 
-Some real issues encountered during development:
-
-* Middleware execution order issues
-* MongoDB Atlas DNS resolution failures
-* Runtime incompatibility with express-mongo-sanitize
-* Validation contract mismatches
-* Operational vs programmer error classification
-* Request lifecycle debugging
-
-These failures provided deeper backend understanding than simple feature implementation.
+* Layered architecture
+* Cache-aside pattern
+* Graceful degradation
+* Timeout protection
+* Fire-and-forget analytics
+* Request tracing
+* Structured logging
+* Validation middleware
+* Rate limiting
+* Operational error handling
 
 ---
 
-# Scalability Considerations
+# 📈 Future Improvements
 
-Current architecture is intentionally designed to evolve.
+Potential future upgrades:
 
-Future scalability improvements may include:
-
-* Redis caching
-* Distributed rate limiting
-* Analytics aggregation optimization
-* MongoDB indexing optimization
-* Docker containerization
-* CI/CD pipelines
-* API versioning
-* Horizontal scaling
-* Queue-based analytics processing
+* Queue-based analytics
 * Background workers
-* CDN integration
-* URL expiration support
+* Health check endpoints
+* CI/CD pipeline
+* Integration testing
+* Docker Compose setup
+* Deployment pipeline
+* Analytics aggregation
+* Cache invalidation for update APIs
 
 ---
 
-# Future Features
+# 🎯 Main Learning Outcomes
 
-## Frontend Integration
+This project helped in deeply understanding:
 
-Planned frontend stack:
-
-* React.js
-* Tailwind CSS
-* Axios
-* Authentication UI
-* Analytics Dashboard
-
----
-
-## Advanced Backend Features
-
-Planned additions:
-
-* User authentication
-* JWT-based authorization
-* User-specific URLs
-* Analytics dashboard APIs
-* Redis caching
-* Click analytics aggregation
-* Expiring URLs
-* QR code generation
-* Admin dashboard
-* Custom domains
-* Docker deployment
-* CI/CD pipelines
+* backend request lifecycle
+* Redis caching strategies
+* scalable backend architecture
+* graceful degradation
+* async side effects
+* timeout protection
+* layered architecture
+* backend observability
+* production-oriented backend design
 
 ---
 
-# Deployment
+# 👨‍💻 Author
 
-Deployment configuration will be added later.
+## Luv Tomar
 
-Planned deployment targets:
-
-* Render
-* Railway
-* AWS
-* Docker
-* Nginx reverse proxy
-
----
-
-# Screenshots
-
-Screenshots and architecture diagrams will be added later.
-
----
-
-# Frontend Placeholder
-
-Frontend application is currently under development and will be integrated with this backend later.
-
----
-
-# Key Takeaway
-
-This project is less about building a simple URL shortener and more about understanding how production backend systems are designed, structured, secured, monitored, and debugged.
-
-The focus is on learning backend engineering deeply rather than just implementing CRUD functionality.
+Built in **2026** as a backend engineering learning project focused on scalability, resilience, observability, and production-oriented backend architecture.
