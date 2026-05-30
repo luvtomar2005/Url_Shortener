@@ -22,15 +22,13 @@ async function main() {
     const app = createApp();
 
     app.listen(env.PORT, () => {
-        console.log(
-            `Server is running on port ${env.PORT}`
-        );
+       
     });
 }
 
 main().catch((err) => {
 
-    console.log("Startup error:", err);
+     console.log("Startup error:", err);
 
     process.exit(1);
 });
