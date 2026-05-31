@@ -1,41 +1,45 @@
-const Url = require("../models/url_model");
+const {
+  createShortUrlService,
+  getRecentUrlsService,
+  buildShortUrl,
+} = require("../service/url_service");
 
-const { createShortUrlService } = require("../service/url_service");
-
-const { trackAnalytics } = require("../service/analytics_service");
-
-const AppError = require("../utils/AppError");
+const formatUrlResponse = (urlDoc) => ({
+  _id: urlDoc._id,
+  originalUrl: urlDoc.originalUrl,
+  shortCode: urlDoc.shortCode,
+  shortUrl: buildShortUrl(urlDoc.shortCode),
+  status: urlDoc.status,
+  expiresAt: urlDoc.expiresAt ?? null,
+  createdAt: urlDoc.createdAt,
+});
 
 const createShortUrl = async (req, res) => {
-  console.log("CONTROLLER START");
-
-  const { originalUrl, customAlias } = req.body;
-
-  console.log("BEFORE SERVICE");
+  const { originalUrl, customAlias, expiresAt } = req.body;
 
   const newUrl = await createShortUrlService({
     originalUrl,
-
     customAlias,
+    expiresAt,
   });
-
-  console.log("AFTER SERVICE");
 
   return res.status(201).json({
     success: true,
-
-    shortCode: newUrl.shortCode,
-
-    shortUrl: `http://localhost:3000/${newUrl.shortCode}`,
+    message: "Short URL created successfully",
+    data: formatUrlResponse(newUrl),
   });
 };
 
+const getRecentUrls = async (req, res) => {
+  const urls = await getRecentUrlsService(20);
 
-
-module.exports = {
-
-    createShortUrl,
-
-    
+  return res.status(200).json({
+    success: true,
+    data: urls,
+  });
 };
 
+module.exports = {
+  createShortUrl,
+  getRecentUrls,
+};

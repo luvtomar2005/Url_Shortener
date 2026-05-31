@@ -17,8 +17,9 @@ const validateCustomAlias = (alias) => {
 };
 
 exports.createShortUrlService = async ({
-    originalUrl,
-    customAlias
+  originalUrl,
+  customAlias,
+  expiresAt,
 }) => {
 
     let shortCode;
@@ -80,7 +81,9 @@ exports.createShortUrlService = async ({
 
                 originalUrl,
 
-                shortCode
+                shortCode,
+
+                expiresAt: expiresAt ?? null,
             });
 
         return newUrl;
@@ -109,3 +112,25 @@ exports.getOriginalUrlService =
 
         return url;
     };
+
+const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+
+exports.getRecentUrlsService = async (limit = 20) => {
+  const urls = await Url.find()
+    .sort({ createdAt: -1 })
+    .limit(limit)
+    .lean();
+
+  return urls.map((url) => ({
+    _id: url._id,
+    originalUrl: url.originalUrl,
+    shortCode: url.shortCode,
+    shortUrl: `${BASE_URL}/${url.shortCode}`,
+    clicks: url.clicks ?? 0,
+    status: url.status,
+    expiresAt: url.expiresAt ?? null,
+    createdAt: url.createdAt,
+  }));
+};
+
+exports.buildShortUrl = (shortCode) => `${BASE_URL}/${shortCode}`;

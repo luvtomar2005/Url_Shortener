@@ -11,11 +11,11 @@ const asyncHandler = require("../middlewares/async_handler");
 const { createShortUrlSchema } = require("../validations/urlValidation");
 
 router.post(
-  "/shorten",
-
+  "/url/shorten",
   validate(createShortUrlSchema),
-
   asyncHandler(urlController.createShortUrl),
 );
+
+router.get("/url/recent", asyncHandler(urlController.getRecentUrls));
 
 module.exports = router;

@@ -1,5 +1,7 @@
 const express = require("express");
 
+const cors = require("cors");
+
 const helmet = require("helmet");
 
 const hpp = require("hpp");
@@ -28,6 +30,8 @@ function createApp() {
     1. SECURITY MIDDLEWARES
     ==============================
     */
+
+  app.use(cors({ origin: true, credentials: true }));
 
   app.use(helmet());
 
