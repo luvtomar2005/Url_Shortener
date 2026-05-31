@@ -3,6 +3,6 @@ readme.md
 .env
 Frontend1
 
-.env
+.env.example
 .vscode
 .DS_Store

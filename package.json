@@ -1,5 +1,14 @@
 {
+  "name": "url-shortener",
+  "private": true,
+  "scripts": {
+    "dev:backend": "npm run dev --prefix Backend",
+    "dev:frontend": "npm run dev --prefix Frontend",
+    "build:frontend": "npm run build --prefix Frontend"
+  },
   "dependencies": {
-    "crypto": "^1.0.1"
+    "@tailwindcss/vite": "^4.3.0",
+    "axios": "^1.16.1",
+    "tailwindcss": "^4.3.0"
   }
 }
